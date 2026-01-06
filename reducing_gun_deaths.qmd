@@ -1,0 +1,121 @@
+---
+title: "Reducing Gun Deaths"
+execute:
+  keep-md: true
+  df-print: paged
+  warning: false
+format:
+  html:
+    code-fold: true
+    code-line-numbers: true
+---
+
+## Reducing Gun Deaths 
+
+```{r}
+
+library(ggplot2)
+library(tidyverse)
+library(readxl)
+library(openxlsx)
+library(pander)
+library(downloader)
+library(haven)
+library(foreign)
+library(rio)
+library(tidyquant)
+library(lubridate)
+
+```
+
+
+```{r}
+
+##Read the csv
+
+gun_deaths <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/guns-data/master/full_data.csv")
+theme_set(theme_bw())
+
+## Add the season category
+
+gun_deaths <- gun_deaths %>%
+  mutate(
+    season = case_when(
+      month %in% c(12,1,2) ~ "Winter",
+      month %in% c(3,4,5)  ~ "Spring",
+      month %in% c(6,7,8)  ~ "Summer",
+      month %in% c(9,10,11)~ "Fall"
+    )
+  )
+
+```
+
+```{r}
+
+## Group_by() and sum() the number of rows per race
+
+gun_deaths_grouped <- gun_deaths %>% 
+  filter(intent== "Homicide") %>%
+  group_by(race) %>%
+  count()
+
+
+##Create a plot 
+
+ggplot(gun_deaths_grouped, aes(x=race, y=n)) +
+  geom_col(fill="skyblue", color="red") +
+  labs(
+    title="Number of Gun Homicides by Race",
+    x="Race",
+    y="Number of Gun Deaths"
+  )
+
+```
+
+The article "Gun Deaths in America" by Ben Casselman, Matthew Conlen, and Reuben Fischer-Baum provides an overview of gun-related deaths in the United States. It highlights that gun deaths have been rising steadily over the past few years, reaching alarming levels. The analysis reveals that the majority of gun deaths are due to suicides, followed by homicides and accidental shootings. The article emphasizes the need for comprehensive measures to address this issue, including mental health support, stricter gun control policies, and improved safety education. When filtered to homicides only, black gun homicides are the highest by far. 
+
+```{r}
+
+##Create a "season" column to categorize the data and group_by() and count() them 
+
+gun_deaths_season <- gun_deaths %>%
+  filter(intent == "Suicide") %>%
+  group_by(season) %>%
+  count()
+
+## Create the visualization
+
+ggplot(gun_deaths_season, aes(x=season, y=n)) +
+  geom_col(fill="skyblue", color="red") +
+  labs(
+    title="Number of Suicides per Season",
+    x="Season",
+    y="Number of Suicides"
+  )
+  
+```
+
+According to the barplot, most suicides take place during summer and the least take place during winter, which is contrary to the stigma which says most suicides will take place during the winter. 
+
+```{r}
+
+## Create the dataframe 
+
+deaths <- gun_deaths %>%
+  filter(race == "Black") %>%
+  filter(sex == "M") %>%
+  group_by(season) %>%
+  count()
+  
+## Create the visual 
+
+ggplot(deaths, aes(x=season, y=n)) +
+  geom_col(fill="skyblue", color="red") +
+  labs(
+    title="Number of Suicides per Season",
+    x="Season",
+    y="Number of Suicides"
+  )
+```
+
+When filtered to black male deaths, the data shows a slight difference between summer and the rest of the seasons. According to the barplot most deaths haven taken place during he summer months. 
